@@ -5,7 +5,7 @@
 /**
  * @file stm32_bl.c
  * @author Evan Stoddard
- * @brief 
+ * @brief Implementation of STM32 ROM Bootloader protocol
  */
 
 #include "stm32_bl.h"
@@ -15,12 +15,6 @@
 /*****************************************************************************
  * Definitions
  *****************************************************************************/
-
-/**
- * @brief 
- * 
- */
-#define STM32_BL_MAX_TRANSFER 256
 
 /*****************************************************************************
  * Structs, Unions, Enums, & Typedefs
@@ -51,7 +45,7 @@ static stm32_bl_inst_t inst;
  *****************************************************************************/
 
 /**
- * @brief 
+ * @brief Calculate XOR'd checksum
  * 
  * @param src 
  * @param len 
@@ -60,19 +54,19 @@ static stm32_bl_inst_t inst;
 uint8_t stm32_bl_calculate_checksum(void *src, uint32_t len);
 
 /**
- * @brief 
+ * @brief Write a command and wait for ack
  * 
- * @param command 
- * @return true 
- * @return false 
+ * @param command Command to write
+ * @return true Successfully wrote command
+ * @return false Unsuccessfully wrote command
  */
 bool stm32_bl_write_command(uint8_t command);
 
 /**
- * @brief 
+ * @brief Wait for ACK byte from bootloader
  * 
- * @return true 
- * @return false 
+ * @return true Received ACK
+ * @return false Didn't receive ACK
  */
 bool stm32_bl_wait_for_ack(void);
 
@@ -81,18 +75,21 @@ bool stm32_bl_wait_for_ack(void);
  *****************************************************************************/
 
 bool stm32_bl_write(uint32_t addr, void *src, uint32_t len) {
-    
-    if (len > STM32_BL_MAX_TRANSFER)
+    if (len > STM32_BL_MAX_TRANSFER_SIZE)
         return false;
     
     // Buffer for address (needs to be big endian)
     // Size is max transfer size plus one byte for size
     // and another byte for checksum
-    uint8_t buffer[STM32_BL_MAX_TRANSFER + 2] = {0};
-    
+    uint8_t buffer[STM32_BL_MAX_TRANSFER_SIZE + 2] = {0};
+
+    // Please see: https://sourceforge.net/projects/stm32flash/
+    // I don't fully understand everything around this aligned length...
+    uint32_t aligned_len = (len + 3) & ~3;
+
     // Setup buffer
-    buffer[0] = (uint8_t)len;
-    buffer[1 + len] = (uint8_t)len;
+    buffer[0] = (uint8_t)(aligned_len - 1);
+    buffer[1 + len] = (uint8_t)(aligned_len - 1);
     buffer[1 + len] ^= stm32_bl_calculate_checksum(src, len);
     memcpy(&buffer[1], src, len);
     
@@ -114,9 +111,9 @@ bool stm32_bl_write(uint32_t addr, void *src, uint32_t len) {
         
     if (!stm32_bl_wait_for_ack())
         return false;
-        
+
     // Write data and wait for ack
-    if (!inst.write_func(buffer, len + 2))
+    if (!inst.write_func(buffer, aligned_len + 2))
         return false;
     
     return stm32_bl_wait_for_ack();
@@ -142,7 +139,7 @@ uint8_t stm32_bl_calculate_checksum(void *src, uint32_t len) {
 
 bool stm32_bl_write_command(uint8_t command) {
     if (!inst.write_func)
-        return;
+        return false;
     
     // Buffer with command as first byte and XOR'd compliment
     uint8_t buf[] = {command, 0xFF ^ command};

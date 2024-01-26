@@ -5,7 +5,7 @@
 /**
  * @file stm32_bl_messages.h
  * @author Evan Stoddard
- * @brief 
+ * @brief Messages defined by the STM32 ROM Bootloader
  */
 
 #ifndef STM32_BL_MESSAGES_H_

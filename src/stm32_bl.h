@@ -5,7 +5,7 @@
 /**
  * @file stm32_bl.h
  * @author Evan Stoddard
- * @brief 
+ * @brief Implementation of STM32 ROM Bootloader protocol
  */
 
 #ifndef STM32_BL_H_
@@ -22,18 +22,24 @@ extern "C" {
  * Definitions
  *****************************************************************************/
 
+/**
+ * @brief Max transfer size of a read/write transaction
+ * 
+ */
+#define STM32_BL_MAX_TRANSFER_SIZE 256
+
 /*****************************************************************************
  * Structs, Unions, Enums, & Typedefs
  *****************************************************************************/
 
 /**
- * @brief 
+ * @brief Typedef for interface write function pointer
  * 
  */
 typedef int32_t (*stm32_bl_write_func_t)(void *src, uint32_t len);
 
 /**
- * @brief 
+ * @brief Typedef for interface read function pointer
  * 
  */
 typedef int32_t (*stm32_bl_read_func_t)(void *dst, uint32_t len);
@@ -43,27 +49,27 @@ typedef int32_t (*stm32_bl_read_func_t)(void *dst, uint32_t len);
  *****************************************************************************/
 
 /**
- * @brief 
+ * @brief Write data to memory
  * 
  * @param addr Address to write to
- * @param src 
- * @param len 
- * @return true 
- * @return false 
+ * @param src Source buffer to write
+ * @param len Length of buffer (must be <= STM32_BL_MAX_TRANSFER_SIZE)
+ * @return true Able to transfer to memory
+ * @return false Unable to transfer to memory
  */
 bool stm32_bl_write(uint32_t addr, void *src, uint32_t len);
 
 /**
- * @brief 
+ * @brief Set low-level transfer write function pointer
  * 
- * @param func 
+ * @param func Function pointer that will handle write transfer over communication protocol
  */
 void stm32_bl_set_write_func(stm32_bl_write_func_t func);
 
 /**
- * @brief 
+ * @brief Set low-level transfer read function pointer
  * 
- * @param func 
+ * @param func Function pointer that will handle read transfer over communication protocol
  */
 void stm32_bl_set_read_func(stm32_bl_read_func_t func);
 
