@@ -60,6 +60,15 @@ typedef int32_t (*stm32_bl_read_func_t)(void *dst, uint32_t len);
 bool stm32_bl_write(uint32_t addr, void *src, uint32_t len);
 
 /**
+ * @brief Command bootloader to execute starting at address
+ * 
+ * @param addr Address to start executing
+ * @return true Successfully sent command
+ * @return false Unsuccessfully sent command
+ */
+bool stm32_bl_go(uint32_t addr);
+
+/**
  * @brief Set low-level transfer write function pointer
  * 
  * @param func Function pointer that will handle write transfer over communication protocol

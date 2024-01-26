@@ -152,6 +152,27 @@ bool stm32_bl_write_command(uint8_t command) {
     return stm32_bl_wait_for_ack();
 }
 
+bool stm32_bl_go(uint32_t addr) {
+    // Convert address to big endian and get checksum
+    uint8_t addr_buffer[5] = { 0 };
+    addr_buffer[0] = addr >> 24;
+    addr_buffer[1] = (addr >> 16) & 0xFF;
+    addr_buffer[2] = (addr >> 8) & 0xFF;
+    addr_buffer[3] = addr & 0xFF;
+    addr_buffer[4] = stm32_bl_calculate_checksum(addr_buffer, sizeof(uint32_t));
+
+    // Write command
+    if (!stm32_bl_write_command(STM32_BL_CMD_GO))
+        return false;
+
+    // Write address and checksum
+    if (!inst.write_func(addr_buffer, 5))
+        return false;
+
+    // Return ACK condition
+    return stm32_bl_wait_for_ack();
+}
+
 bool stm32_bl_wait_for_ack(void) {
     if (!inst.read_func)
         return false;
