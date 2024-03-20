@@ -29,7 +29,7 @@ extern "C" {
 #define STM32_BL_CMD_READ_MEM   0x11U
 #define STM32_BL_CMD_GO         0x21U
 #define STM32_BL_CMD_WRITE_MEM  0x31U
-#define STM32_BL_CMD_ERASE      0x43U
+#define STM32_BL_CMD_ERASE      0x44U
 
 /*****************************************************************************
  * Responses
